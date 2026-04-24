@@ -1,18 +1,16 @@
 # Project Title
 
-Write a 1-2 sentences that quickly and clearly convey what your repo is for.
+Stat 184 Final Project
 
 ## Overview
 
-Expand on those introductory sentences with a brief but informative description of your project's purpose and goals. This section should help visitors decide whether they should dig deeper into your repo/project.
-
-### Interesting Insight (Optional)
-
-This is optional but highly recommended. You'll include one interesting insight from your project as part of the README. This insight is most effective when you include a visual. Keep in mind that this visual must be included as an image file (e.g., JPG, PNG, etc.). You can export plots created with `{ggplot2}` by using the function `ggsave`.
+This repo is for our group's Stat 184 Course Project, in which we will collect, wrangle, and clean data from a data repository, and then create the table, plot, and reproducible code using Quarto QMD files. We will also use the Github tools appropriately to facilitate the final product.
 
 ## Data Sources and Acknowledgements
 
-Be sure to list where you got any data used within the project. Be sure to acknowledge any one whose work or elements you're drawing upon.
+SCORE Sports Data Repository: 
+https://data.scorenetwork.org/football/nfl-game-outcomes.html
+https://data.scorenetwork.org/football/nfl-team-statistics.html
 
 ## Current Plan
 
