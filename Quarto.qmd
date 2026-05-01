@@ -4,6 +4,7 @@ authors:
   - Addison Cornelius
   - Harry McAnulla
   - David Dara
+date: "May. 1, 2026"
 format:
   pdf:
     toc: false
