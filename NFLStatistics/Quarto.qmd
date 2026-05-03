@@ -33,7 +33,132 @@ We took data from SCORE Sports Data Repository and took two sets of data for our
 The first was a data set that ranged from 2018-2023 that had all regular season games between all teams and had the outcome of when the team was either away or home. 
 The second was a data set that ranged from 1999-2022 that had a variety of statistics for each team. This included all offense data, defense data, wins, losses, etc.
 
+
+
+```{r}
+library(tidyverse)
+library(readr)
+library(ggplot2)
+library(knitr)
+library(gt)
+
+#Loading in our datasets
+##This includes Game outcomes data and Team statistics data
+gameOutcomesRaw <- read.csv("nfl_mahomes_era_games.csv")
+teamStatisticsRaw <- read.csv("nfl-team-statistics.csv")
+
+#Filtertinr the Raw data to show only years 2018 to 2022
+gameOutcomesClean <- gameOutcomesRaw |> 
+  filter(season %in% c(2018, 2019, 2020, 2021, 2022))
+
+#Filtertinr the Raw data to show only years 2018 to 2022 and selecting only offensive columns 
+#as well as specific team and season column
+teamStatisticsCleaned <- teamStatisticsRaw |> 
+  filter(season %in% c(2018, 2019, 2020, 2021, 2022)) |> 
+  select(season, team, starts_with("offense_ave"))
+
+# Convert games into team-level outcomes
+teamGameOutcomes <- gameOutcomesClean |> 
+  select(season, home_team, away_team, home_score, away_score) |> 
+  
+  # Home team rows
+  transmute(
+    season,
+    team = home_team,
+    result = if_else(home_score > away_score, "Win", "Loss")
+  ) |> 
+  
+  # Add away team rows
+  bind_rows(
+    gameOutcomesClean |> 
+      select(season, home_team, away_team, home_score, away_score) |> 
+      transmute(
+        season,
+        team = away_team,
+        result = if_else(away_score > home_score, "Win", "Loss")
+      )
+  )
+
+# Create team scoring table
+teamScoring <- gameOutcomesClean |> 
+  
+  # Home team points
+  transmute(
+    season,
+    team = home_team,
+    points_scored = home_score
+  ) |> 
+  
+  # Add away team points
+  bind_rows(
+    gameOutcomesClean |> 
+      transmute(
+        season,
+        team = away_team,
+        points_scored = away_score
+      )
+  ) |> 
+  
+  # Average by team-season
+  group_by(season, team) |> 
+  summarise(
+    offense_ave_points = mean(points_scored, na.rm = TRUE)
+  )
+
+# Joining with offensive stats
+teamPerformance <- teamGameOutcomes |> 
+  left_join(teamStatisticsCleaned, by = c("season", "team")) |>
+  left_join(teamScoring, by = c("season", "team"))
+
+
+# Create summary table
+summaryTable <- teamPerformance |> 
+  group_by(result) |> 
+  summarise(
+    Avg_Points = mean(offense_ave_points, na.rm = TRUE),
+    Avg_Pass_Yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    Avg_Run_Yards = mean(offense_ave_yards_gained_run, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+# Create plot
+teamWinRates <- teamGameOutcomes |> 
+  group_by(season, team) |> 
+  summarise(
+    wins = sum(result == "Win"),
+    games = n(),
+    win_pct = wins / games
+  )
+
+teamSeasonAnalysis <- teamWinRates |> 
+  left_join(teamStatisticsCleaned, by = c("season", "team")) |>
+  left_join(teamScoring, by = c("season", "team"))
+
+```
+
+
 ## Frequency Table 
+
+```{r}
+summaryTable |> 
+  mutate(result = ifelse(result == "Win", "Wins", "Losses")) |> 
+  gt() |> 
+  tab_header(
+    title = "Average Offensive Performance by Game Outcome",
+    subtitle = "NFL Seasons 2018–2022"
+  ) |> 
+  fmt_number(
+    columns = where(is.numeric),
+    decimals = 2
+  ) |> 
+  cols_label(
+    result = "Game Result",
+    Avg_Points = "Avg Points",
+    Avg_Pass_Yards = "Avg Passing Yards",
+    Avg_Run_Yards = "Avg Rushing Yards"
+  )
+```
 
 Each statistic shown in the table is specifically about the offense. The row is labeled as either Win or Loss. This is to show on average how the offense for each team performed and then the outcome of the game. From the table, it is evident that when the numbers for how the offense performs are higher, the team wins the game.  
 
@@ -42,6 +167,19 @@ Alt Text: Table represents all teams' offensive stats when they win or lose thei
 This table shows different statistics based on the offense of each team in the NFL from the years 2018-2022. Yards gained is how many yards the offense moved forward on each play, getting closer to the end zone. There are two different kinds of ways to gain yards; there’s pass and run. The quarterback has the option to either throw the ball or give it to another player to run it through the defense. Average Air Yards is how far the football travels when the quarterback throws it to his teammate. Average YAC is Yards After Catch; this means it’s finding the average yards the receiver ran after the ball was caught. EPA is Expected Points Added; this means for either a pass play or run how many points they are expected to earn from that play.  WPA is Win Probability Added; which in this case only takes into consideration how the offence performance determines the chance of them winning the game overall. Average points are the average amount of points earned overall. Knowing all of this, when looking at the table it is evident that the stats are higher for the offense when the outcome of the game is a win. From this, we can determine how the offense plays are positively associated with a win.  
 
 ## Average Points Per Game vs Win Percentage
+
+```{r}
+ggplot(teamSeasonAnalysis, aes(x = offense_ave_points, y = win_pct)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    title = "Relationship Between Offensive Scoring and Win Percentage",
+    x = "Average Offensive Points",
+    y = "Win Percentage"
+  ) +
+  theme_minimal()
+
+```
  
 The image is a scatter plot graph illustrating the relationship between the average PPG and win ratio for the offense from each NFL team from 2018-2022. The horizontal axis represents the average offensive points and has a range of 7 to 35 points. The vertical axis represents the win percentage, which ranges from 0-1. Each glyph shown on the graph represents an NFL team (32 teams total). The line in the middle of the graph is the overall average from 2018-2022, so if a team falls below the line, they are below the average. If they are above the line, then they are above average. From this it is indicated that the more average offensive points there are, the higher the win percentage is.  
 
@@ -53,6 +191,19 @@ In the figure, we can examine the potential relationship between average PPG and
 
 ### Passing Yards 
 
+```{r}
+
+ggplot(teamSeasonAnalysis, aes(x = offense_ave_yards_gained_pass, y = win_pct)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    title = "Relationship Between Offensive Yards Gained (Pass) and Win Percentage",
+    x = "Average Passing Yards",
+    y = "Win Percentage"
+  ) +
+  theme_minimal()
+```
+
 The image is a scatter plot graph illustrating the relationship between average offensive passing yards for each NFL team and win percentage. The horizontal axis represents the Average Passing Yards and has a range of 4-8 yards. The vertical axis represents the win percentage, which ranges from 0-1. Each glyph shown again represents the 32 teams in the NFL. The line in the middle represents the overall average trend between the two attributes from 2018-2022. From this, it indicated that there is a slightly positive relationship between the average passing yards and the win percentage.  
 
 Alt text: Scatter plot showing a positive relationship between offensive passing yards and win percentage. 
@@ -60,6 +211,19 @@ Alt text: Scatter plot showing a positive relationship between offensive passing
 In the figure, we can examine the potential relationship between average offensive passing yards and win percentage for all NFL teams from 2018-2022. All 32 teams are represented by a glyph. Looking at the relationship between these two attributes, we can conclude that when the offense has a high amount of average passing yards, the win percentage is higher as well. However, because there are some teams who fall below this average, this isn’t the case for them. But there is a pretty positive relationship that shows the two are correlated.  
 
 ### Running Yards
+
+```{r}
+
+ggplot(teamSeasonAnalysis, aes(x = offense_ave_yards_gained_run, y = win_pct)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    title = "Relationship Between Offensive Yards Gained (Run) and Win Percentage",
+    x = "Average Running Yards",
+    y = "Win Percentage"
+  ) +
+  theme_minimal()
+```
 
 The image is a scatter plot graph illustrating the relationship between average offensive running yards and win percentage. The horizontal axis represents the average running yards and has a range of 3.4 to 6.1 yards. The vertical axis represents the win percentage, which ranges from 0-1. Each glyph shown represents the 32 teams of the NFL. The middle line represents the overall average trend between these two attributes. From this, it is indicated that there is a slightly positive relationship between average running yards and winning percentage for these teams.  
 
