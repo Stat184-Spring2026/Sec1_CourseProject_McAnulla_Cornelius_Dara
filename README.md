@@ -14,13 +14,13 @@ https://data.scorenetwork.org/football/nfl-team-statistics.html
 
 ## Current Plan
 
-Provide some information about what you intend to do with the project. You can additionally refer the visitor to your detailed plan document.
+We intend to use the data gained from this project to find relationships between win ratio and multiple offensive statistics in the NFL.
 
 ## Repo Structure
 
-Use this section to explain the structure of your repo. This should help visitors quickly figure out where they should look to find certain elements. Further, you can use this space to highlight and briefly explain important/key files in the repo.
+This repo is separated into multiple files. The file labelled "NFLStatistics" is all the R code used to create and generate tables and graphs, as well as the wrangled and cleaned data. We also included a Course Project Plan that describes the plan of our project.
 
 
 ## Authors
 
-Give information about who are the authors of the project and how people can get in touch if they have questions.
+Harry McAnulla, Addison Cornelius, David Dara

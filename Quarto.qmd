@@ -1,0 +1,74 @@
+---
+title: "Stat 184 Project- NFL Statistics"
+authors:
+  - Addison Cornelius
+  - Harry McAnulla
+  - David Dara
+date: "May. 1, 2026"
+format:
+  pdf:
+    toc: false
+    numer-sections: true
+    fig-align: center
+    cap-location: top
+    geometry:
+      - top=1in
+      - left=1in
+      - right=1in
+      - bottom=1in
+    colorlinks: true
+execute: 
+  echo: false
+  warning: false
+---
+
+## Project Overview
+
+This is a quarto document where we input our findings about offense statistics in the NFL and comparing them to the win percentage. There will be three major sections that have visualizations of our findings and the reasoning behind them. 
+
+## Background Information
+
+
+We took data from SCORE Sports Data Repository and took two sets of data for our project. 
+The first was a data set that ranged from 2018-2023 that had all regular season games between all teams and had the outcome of when the team was either away or home. 
+The second was a data set that ranged from 1999-2022 that had a variety of statistics for each team. This included all offense data, defense data, wins, losses, etc.
+
+## Frequency Table 
+
+Each statistic shown in the table is specifically about the offense. The row is labeled as either Win or Loss. This is to show on average how the offense for each team performed and then the outcome of the game. From the table, it is evident that when the numbers for how the offense performs are higher, the team wins the game.  
+
+Alt Text: Table represents all teams' offensive stats when they win or lose their game. 
+
+This table shows different statistics based on the offense of each team in the NFL from the years 2018-2022. Yards gained is how many yards the offense moved forward on each play, getting closer to the end zone. There are two different kinds of ways to gain yards; there’s pass and run. The quarterback has the option to either throw the ball or give it to another player to run it through the defense. Average Air Yards is how far the football travels when the quarterback throws it to his teammate. Average YAC is Yards After Catch; this means it’s finding the average yards the receiver ran after the ball was caught. EPA is Expected Points Added; this means for either a pass play or run how many points they are expected to earn from that play.  WPA is Win Probability Added; which in this case only takes into consideration how the offence performance determines the chance of them winning the game overall. Average points are the average amount of points earned overall. Knowing all of this, when looking at the table it is evident that the stats are higher for the offense when the outcome of the game is a win. From this, we can determine how the offense plays are positively associated with a win.  
+
+## Average Points Per Game vs Win Percentage
+ 
+The image is a scatter plot graph illustrating the relationship between the average PPG and win ratio for the offense from each NFL team from 2018-2022. The horizontal axis represents the average offensive points and has a range of 7 to 35 points. The vertical axis represents the win percentage, which ranges from 0-1. Each glyph shown on the graph represents an NFL team (32 teams total). The line in the middle of the graph is the overall average from 2018-2022, so if a team falls below the line, they are below the average. If they are above the line, then they are above average. From this it is indicated that the more average offensive points there are, the higher the win percentage is.  
+
+ Alt Text: Scatter plot showing a positive relationship between average PPG (Points Per Game) and win ratio. 
+
+In the figure, we can examine the potential relationship between average PPG and win percentage for each NFL team over the course of 2018-2022. There is a total of 32 teams that are being represented from each glyph on the graph. Each team is being measured by the same scale, which is why we can draw a conclusion on the relationship between PPG and win percentage. We can conclude that the higher the PPG is, the higher the win percentage is. However, there appear to be some discrepancies where this isn’t the case. On average though, this appears to be the case.  
+
+## Average Offensive Yards (Pass vs Run)
+
+### Passing Yards 
+
+The image is a scatter plot graph illustrating the relationship between average offensive passing yards for each NFL team and win percentage. The horizontal axis represents the Average Passing Yards and has a range of 4-8 yards. The vertical axis represents the win percentage, which ranges from 0-1. Each glyph shown again represents the 32 teams in the NFL. The line in the middle represents the overall average trend between the two attributes from 2018-2022. From this, it indicated that there is a slightly positive relationship between the average passing yards and the win percentage.  
+
+Alt text: Scatter plot showing a positive relationship between offensive passing yards and win percentage. 
+
+In the figure, we can examine the potential relationship between average offensive passing yards and win percentage for all NFL teams from 2018-2022. All 32 teams are represented by a glyph. Looking at the relationship between these two attributes, we can conclude that when the offense has a high amount of average passing yards, the win percentage is higher as well. However, because there are some teams who fall below this average, this isn’t the case for them. But there is a pretty positive relationship that shows the two are correlated.  
+
+### Running Yards
+
+The image is a scatter plot graph illustrating the relationship between average offensive running yards and win percentage. The horizontal axis represents the average running yards and has a range of 3.4 to 6.1 yards. The vertical axis represents the win percentage, which ranges from 0-1. Each glyph shown represents the 32 teams of the NFL. The middle line represents the overall average trend between these two attributes. From this, it is indicated that there is a slightly positive relationship between average running yards and winning percentage for these teams.  
+
+Alt text: Scatter plot showing a positive relationship between average running yards and win percentage.
+
+In the figure, we can examine the potential relationship between average offensive passing yards and win percentage for all NFL teams from 2018-2022. All 32 teams are represented by a glyph. Looking at the relationship between these two attributes, we can conclude that when the offense has a high amount of average running yards, the win percentage is higher as well. However, because there are some teams who fall below this average, this isn’t the case for them. But there is a positive relationship that shows the two are correlated. Even though it is still positive, the slope isn't as steep as the other graphs. This means that the relationship between average running yards and win percentage isn’t as strong as the other relationships.  
+
+
+
+
+
+
