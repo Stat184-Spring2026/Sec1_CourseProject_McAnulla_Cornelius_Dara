@@ -1,6 +1,7 @@
 library(tidyverse)
 library(readr)
 library(ggplot2)
+library(gt)
 
 #Loading in our datasets
 ##This includes Game outcomes data and Team statistics data
@@ -75,10 +76,11 @@ teamPerformance <- teamGameOutcomes |>
 summaryTable <- teamPerformance |> 
   group_by(result) |> 
   summarise(
-    across(starts_with("offense_ave"), mean, na.rm = TRUE)
+    Avg_Points = mean(offense_ave_points, na.rm = TRUE),
+    Avg_Pass_Yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    Avg_Run_Yards = mean(offense_ave_yards_gained_run, na.rm = TRUE),
+    .groups = "drop"
   )
-
-print(summaryTable)
 
 
 # Create plot
