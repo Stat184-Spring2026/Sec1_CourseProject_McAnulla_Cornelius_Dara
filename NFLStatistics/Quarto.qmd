@@ -121,6 +121,24 @@ summaryTable <- teamPerformance |>
     .groups = "drop"
   )
 
+passingTable <- teamPerformance |> 
+  group_by(result) |> 
+  summarise(
+    Avg_Passing_Yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    Avg_Points = mean(offense_ave_points, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+runningTable <- teamPerformance |> 
+  group_by(result) |> 
+  summarise(
+    Avg_Running_Yards = mean(offense_ave_yards_gained_run, na.rm = TRUE),
+    Avg_Points = mean(offense_ave_points, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
 
 # Create plot
 teamWinRates <- teamGameOutcomes |> 
@@ -134,6 +152,23 @@ teamWinRates <- teamGameOutcomes |>
 teamSeasonAnalysis <- teamWinRates |> 
   left_join(teamStatisticsCleaned, by = c("season", "team")) |>
   left_join(teamScoring, by = c("season", "team"))
+
+
+
+topPassingTeams <- teamSeasonAnalysis |> 
+  group_by(team) |> 
+  summarise(
+    avg_pass_yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  arrange(desc(avg_pass_yards)) |> 
+  slice_head(n = 10)
+
+winLossTotals <- teamGameOutcomes |> 
+  count(result)
+
+
+
 
 ```
 
@@ -157,6 +192,43 @@ summaryTable |>
     Avg_Points = "Avg Points",
     Avg_Pass_Yards = "Avg Passing Yards",
     Avg_Run_Yards = "Avg Rushing Yards"
+  )
+
+
+
+passingTable |> 
+  mutate(result = ifelse(result == "Win", "Wins", "Losses")) |> 
+  gt() |> 
+  tab_header(
+    title = "Passing Performance by Game Outcome",
+    subtitle = "NFL Seasons 2018-2022"
+  ) |> 
+  fmt_number(
+    columns = where(is.numeric),
+    decimals = 2
+  ) |> 
+  cols_label(
+    result = "Game Result",
+    Avg_Passing_Yards = "Avg Passing Yards",
+    Avg_Points = "Avg Points"
+  )
+
+
+runningTable |> 
+  mutate(result = ifelse(result == "Win", "Wins", "Losses")) |> 
+  gt() |> 
+  tab_header(
+    title = "Running Performance by Game Outcome",
+    subtitle = "NFL Seasons 2018-2022"
+  ) |> 
+  fmt_number(
+    columns = where(is.numeric),
+    decimals = 2
+  ) |> 
+  cols_label(
+    result = "Game Result",
+    Avg_Running_Yards = "Avg Running Yards",
+    Avg_Points = "Avg Points"
   )
 ```
 
@@ -193,43 +265,85 @@ In the figure, we can examine the potential relationship between average PPG and
 
 ```{r}
 
-ggplot(teamSeasonAnalysis, aes(x = offense_ave_yards_gained_pass, y = win_pct)) +
-  geom_point(size = 3, alpha = 0.7) +
-  geom_smooth(method = "lm", se = TRUE) +
+topPassingTeams <- teamSeasonAnalysis |> 
+  group_by(team) |> 
+  summarise(
+    avg_pass_yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  arrange(desc(avg_pass_yards)) |> 
+  slice_head(n = 10)
+
+ggplot(topPassingTeams,
+       aes(x = reorder(team, avg_pass_yards),
+           y = avg_pass_yards)) +
+  geom_col() +
+  coord_flip() +
   labs(
-    title = "Relationship Between Offensive Yards Gained (Pass) and Win Percentage",
-    x = "Average Passing Yards",
-    y = "Win Percentage"
+    title = "Top 10 NFL Teams in Average Passing Yards",
+    x = "Team",
+    y = "Average Passing Yards"
   ) +
   theme_minimal()
 ```
 
-The image is a scatter plot graph illustrating the relationship between average offensive passing yards for each NFL team and win percentage. The horizontal axis represents the Average Passing Yards and has a range of 4-8 yards. The vertical axis represents the win percentage, which ranges from 0-1. Each glyph shown again represents the 32 teams in the NFL. The line in the middle represents the overall average trend between the two attributes from 2018-2022. From this, it indicated that there is a slightly positive relationship between the average passing yards and the win percentage.  
+The image is a horizontal bar graph illustrating the top 10 NFL teams with the highest average offensive passing yards from 2018–2022. The horizontal axis represents the average passing yards gained, while the vertical axis lists the NFL teams. Each bar represents one team and its overall passing performance during the selected seasons. Teams with longer bars had higher average passing yard totals. From the graph, it is evident that some teams were significantly more effective in the passing game than others.
 
-Alt text: Scatter plot showing a positive relationship between offensive passing yards and win percentage. 
+Alt text: Horizontal bar chart displaying the top 10 NFL teams in average passing yards from 2018–2022.
 
-In the figure, we can examine the potential relationship between average offensive passing yards and win percentage for all NFL teams from 2018-2022. All 32 teams are represented by a glyph. Looking at the relationship between these two attributes, we can conclude that when the offense has a high amount of average passing yards, the win percentage is higher as well. However, because there are some teams who fall below this average, this isn’t the case for them. But there is a pretty positive relationship that shows the two are correlated.  
+In the figure, we can compare the average offensive passing yards among the top passing teams in the NFL from 2018–2022. Each bar represents one NFL team and allows us to visually compare their offensive passing production. The teams near the top of the graph had the highest average passing yards, indicating stronger and more efficient passing offenses during this time period. Although the graph does not directly display win percentage, teams with higher passing yard averages often had stronger overall offensive performances. This demonstrates how passing yards can contribute to a team’s offensive success. 
 
 ### Running Yards
 
 ```{r}
+topRunningTeams <- teamSeasonAnalysis |> 
+  group_by(team) |> 
+  summarise(
+    avg_run_yards = mean(offense_ave_yards_gained_run, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  arrange(desc(avg_run_yards)) |> 
+  slice_head(n = 10)
 
-ggplot(teamSeasonAnalysis, aes(x = offense_ave_yards_gained_run, y = win_pct)) +
-  geom_point(size = 3, alpha = 0.7) +
-  geom_smooth(method = "lm", se = TRUE) +
+ggplot(topRunningTeams,
+       aes(x = reorder(team, avg_run_yards),
+           y = avg_run_yards)) +
+  geom_col(fill = "darkgreen") +
+  coord_flip() +
   labs(
-    title = "Relationship Between Offensive Yards Gained (Run) and Win Percentage",
-    x = "Average Running Yards",
-    y = "Win Percentage"
+    title = "Top 10 NFL Teams in Average Running Yards",
+    x = "Team",
+    y = "Average Running Yards"
   ) +
   theme_minimal()
 ```
 
-The image is a scatter plot graph illustrating the relationship between average offensive running yards and win percentage. The horizontal axis represents the average running yards and has a range of 3.4 to 6.1 yards. The vertical axis represents the win percentage, which ranges from 0-1. Each glyph shown represents the 32 teams of the NFL. The middle line represents the overall average trend between these two attributes. From this, it is indicated that there is a slightly positive relationship between average running yards and winning percentage for these teams.  
+The image is a horizontal bar graph illustrating the top 10 NFL teams with the highest average offensive running yards from 2018–2022. The horizontal axis represents the average running yards gained, while the vertical axis lists the NFL teams. Each bar represents one team and its overall average rushing performance across the seasons included in the data. Teams with longer bars had higher average rushing yards. From the graph, it is evident that some teams relied more heavily on the running game and were more successful at gaining rushing yards than others.
 
-Alt text: Scatter plot showing a positive relationship between average running yards and win percentage.
+Alt text: Horizontal bar chart displaying the top 10 NFL teams in average running yards from 2018–2022.
 
-In the figure, we can examine the potential relationship between average offensive passing yards and win percentage for all NFL teams from 2018-2022. All 32 teams are represented by a glyph. Looking at the relationship between these two attributes, we can conclude that when the offense has a high amount of average running yards, the win percentage is higher as well. However, because there are some teams who fall below this average, this isn’t the case for them. But there is a positive relationship that shows the two are correlated. Even though it is still positive, the slope isn't as steep as the other graphs. This means that the relationship between average running yards and win percentage isn’t as strong as the other relationships.  
+In the figure, we can compare the average offensive running yards among the top rushing teams in the NFL from 2018–2022. Each bar represents one NFL team and allows us to visually compare their rushing performance. The teams near the top of the graph had the highest average running yards, indicating stronger rushing offenses during this time period. While the graph does not directly show win percentage, it demonstrates which teams were most effective at gaining yards on the ground. This helps provide insight into how important the running game can be to an offense’s overall success.
+
+
+
+```{r}
+
+ggplot(winLossTotals,
+       aes(x = "", y = n, fill = result)) +
+  geom_col(width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  labs(
+    title = "Overall NFL Win vs Loss Distribution (2018–2022)",
+    fill = "Game Outcome"
+  ) +
+  theme_void()
+
+```
+The image is a pie chart illustrating the overall distribution of NFL game outcomes (wins vs losses) from 2018–2022. The chart is divided into two colored sections representing the total number of wins and total number of losses recorded across all teams and seasons in the dataset. Each section’s size corresponds to how frequently that outcome occurred. Because every game produces one win and one loss across the two teams involved, the distribution is expected to be nearly balanced overall. This visualization helps show the total structure of outcomes in the dataset before breaking down team-level performance.
+
+Pie chart showing the overall distribution of NFL game outcomes (wins and losses) from 2018–2022, with two nearly equal sections representing each outcome.
+
+In this figure, we can observe the overall distribution of wins and losses across all NFL games from 2018–2022. Since every game includes one winning team and one losing team, the totals for wins and losses are expected to be very similar, which is reflected in the chart. This visualization helps establish a baseline understanding of the dataset before analyzing more specific relationships between offensive performance and winning outcomes. While it does not show team-level differences, it confirms the balance of outcomes across the seasons included in the study.
 
 
 
