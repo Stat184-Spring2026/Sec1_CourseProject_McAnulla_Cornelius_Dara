@@ -67,6 +67,11 @@ Alt text: Scatter plot showing a positive relationship between average running y
 
 In the figure, we can examine the potential relationship between average offensive passing yards and win percentage for all NFL teams from 2018-2022. All 32 teams are represented by a glyph. Looking at the relationship between these two attributes, we can conclude that when the offense has a high amount of average running yards, the win percentage is higher as well. However, because there are some teams who fall below this average, this isn’t the case for them. But there is a positive relationship that shows the two are correlated. Even though it is still positive, the slope isn't as steep as the other graphs. This means that the relationship between average running yards and win percentage isn’t as strong as the other relationships.  
 
+## Refrences
+
+For this data, we got our data from SCORE Data Sports Repository, which both of these files were included within our own repository. https://data.scorenetwork.org/ 
+
+Also, for the descriptions for the pie chart data was obtained from Arizona State University. This website was created by the university to help create our image to help display our data. https://teachonline.asu.edu/image-accessibility-generator/ 
 
 ## Code Appendix
 
