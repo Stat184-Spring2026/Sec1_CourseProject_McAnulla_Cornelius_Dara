@@ -33,6 +33,11 @@ We took data from SCORE Sports Data Repository and took two sets of data for our
 The first was a data set that ranged from 2018-2023 that had all regular season games between all teams and had the outcome of when the team was either away or home. 
 The second was a data set that ranged from 1999-2022 that had a variety of statistics for each team. This included all offense data, defense data, wins, losses, etc.
 
+## References
+
+For this data, we got our data from SCORE Data Sports Repository, which both of these files were included within our own repository. https://data.scorenetwork.org/ 
+
+Also, for the descriptions for the pie chart data was obtained from ChatGPT. The prompt was "Can you generate alt text and narrative text for this pie chart for nfl data from 2018-2022". This was generated at 9:45pm 5/6/2026.
 
 
 ```{r}
@@ -345,6 +350,266 @@ Pie chart showing the overall distribution of NFL game outcomes (wins and losses
 
 In this figure, we can observe the overall distribution of wins and losses across all NFL games from 2018–2022. Since every game includes one winning team and one losing team, the totals for wins and losses are expected to be very similar, which is reflected in the chart. This visualization helps establish a baseline understanding of the dataset before analyzing more specific relationships between offensive performance and winning outcomes. While it does not show team-level differences, it confirms the balance of outcomes across the seasons included in the study.
 
+
+## Code Appendix
+```{r}
+#| label: codeAppend
+#| ref-label: !expr knitr::all_labels()
+#| echo: true
+#| eval: false
+
+library(tidyverse)
+library(readr)
+library(ggplot2)
+library(knitr)
+library(gt)
+
+#Loading in our datasets
+##This includes Game outcomes data and Team statistics data
+gameOutcomesRaw <- read.csv("nfl_mahomes_era_games.csv")
+teamStatisticsRaw <- read.csv("nfl-team-statistics.csv")
+
+#Filtertinr the Raw data to show only years 2018 to 2022
+gameOutcomesClean <- gameOutcomesRaw |> 
+  filter(season %in% c(2018, 2019, 2020, 2021, 2022))
+
+#Filtertinr the Raw data to show only years 2018 to 2022 and selecting only offensive columns 
+#as well as specific team and season column
+teamStatisticsCleaned <- teamStatisticsRaw |> 
+  filter(season %in% c(2018, 2019, 2020, 2021, 2022)) |> 
+  select(season, team, starts_with("offense_ave"))
+
+# Convert games into team-level outcomes
+teamGameOutcomes <- gameOutcomesClean |> 
+  select(season, home_team, away_team, home_score, away_score) |> 
+  
+  # Home team rows
+  transmute(
+    season,
+    team = home_team,
+    result = if_else(home_score > away_score, "Win", "Loss")
+  ) |> 
+  
+  # Add away team rows
+  bind_rows(
+    gameOutcomesClean |> 
+      select(season, home_team, away_team, home_score, away_score) |> 
+      transmute(
+        season,
+        team = away_team,
+        result = if_else(away_score > home_score, "Win", "Loss")
+      )
+  )
+
+# Create team scoring table
+teamScoring <- gameOutcomesClean |> 
+  
+  # Home team points
+  transmute(
+    season,
+    team = home_team,
+    points_scored = home_score
+  ) |> 
+  
+  # Add away team points
+  bind_rows(
+    gameOutcomesClean |> 
+      transmute(
+        season,
+        team = away_team,
+        points_scored = away_score
+      )
+  ) |> 
+  
+  # Average by team-season
+  group_by(season, team) |> 
+  summarise(
+    offense_ave_points = mean(points_scored, na.rm = TRUE)
+  )
+
+# Joining with offensive stats
+teamPerformance <- teamGameOutcomes |> 
+  left_join(teamStatisticsCleaned, by = c("season", "team")) |>
+  left_join(teamScoring, by = c("season", "team"))
+
+
+# Create summary table
+summaryTable <- teamPerformance |> 
+  group_by(result) |> 
+  summarise(
+    Avg_Points = mean(offense_ave_points, na.rm = TRUE),
+    Avg_Pass_Yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    Avg_Run_Yards = mean(offense_ave_yards_gained_run, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+passingTable <- teamPerformance |> 
+  group_by(result) |> 
+  summarise(
+    Avg_Passing_Yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    Avg_Points = mean(offense_ave_points, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+runningTable <- teamPerformance |> 
+  group_by(result) |> 
+  summarise(
+    Avg_Running_Yards = mean(offense_ave_yards_gained_run, na.rm = TRUE),
+    Avg_Points = mean(offense_ave_points, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+
+# Create plot
+teamWinRates <- teamGameOutcomes |> 
+  group_by(season, team) |> 
+  summarise(
+    wins = sum(result == "Win"),
+    games = n(),
+    win_pct = wins / games
+  )
+
+teamSeasonAnalysis <- teamWinRates |> 
+  left_join(teamStatisticsCleaned, by = c("season", "team")) |>
+  left_join(teamScoring, by = c("season", "team"))
+
+
+
+topPassingTeams <- teamSeasonAnalysis |> 
+  group_by(team) |> 
+  summarise(
+    avg_pass_yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  arrange(desc(avg_pass_yards)) |> 
+  slice_head(n = 10)
+
+winLossTotals <- teamGameOutcomes |> 
+  count(result)
+
+
+summaryTable |> 
+  mutate(result = ifelse(result == "Win", "Wins", "Losses")) |> 
+  gt() |> 
+  tab_header(
+    title = "Average Offensive Performance by Game Outcome",
+    subtitle = "NFL Seasons 2018–2022"
+  ) |> 
+  fmt_number(
+    columns = where(is.numeric),
+    decimals = 2
+  ) |> 
+  cols_label(
+    result = "Game Result",
+    Avg_Points = "Avg Points",
+    Avg_Pass_Yards = "Avg Passing Yards",
+    Avg_Run_Yards = "Avg Rushing Yards"
+  )
+
+
+
+passingTable |> 
+  mutate(result = ifelse(result == "Win", "Wins", "Losses")) |> 
+  gt() |> 
+  tab_header(
+    title = "Passing Performance by Game Outcome",
+    subtitle = "NFL Seasons 2018-2022"
+  ) |> 
+  fmt_number(
+    columns = where(is.numeric),
+    decimals = 2
+  ) |> 
+  cols_label(
+    result = "Game Result",
+    Avg_Passing_Yards = "Avg Passing Yards",
+    Avg_Points = "Avg Points"
+  )
+
+
+runningTable |> 
+  mutate(result = ifelse(result == "Win", "Wins", "Losses")) |> 
+  gt() |> 
+  tab_header(
+    title = "Running Performance by Game Outcome",
+    subtitle = "NFL Seasons 2018-2022"
+  ) |> 
+  fmt_number(
+    columns = where(is.numeric),
+    decimals = 2
+  ) |> 
+  cols_label(
+    result = "Game Result",
+    Avg_Running_Yards = "Avg Running Yards",
+    Avg_Points = "Avg Points"
+  )
+
+
+ggplot(teamSeasonAnalysis, aes(x = offense_ave_points, y = win_pct)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(
+    title = "Relationship Between Offensive Scoring and Win Percentage",
+    x = "Average Offensive Points",
+    y = "Win Percentage"
+  ) +
+  theme_minimal()
+
+topPassingTeams <- teamSeasonAnalysis |> 
+  group_by(team) |> 
+  summarise(
+    avg_pass_yards = mean(offense_ave_yards_gained_pass, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  arrange(desc(avg_pass_yards)) |> 
+  slice_head(n = 10)
+
+ggplot(topPassingTeams,
+       aes(x = reorder(team, avg_pass_yards),
+           y = avg_pass_yards)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 NFL Teams in Average Passing Yards",
+    x = "Team",
+    y = "Average Passing Yards"
+  ) +
+  theme_minimal()
+
+topRunningTeams <- teamSeasonAnalysis |> 
+  group_by(team) |> 
+  summarise(
+    avg_run_yards = mean(offense_ave_yards_gained_run, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  arrange(desc(avg_run_yards)) |> 
+  slice_head(n = 10)
+
+ggplot(topRunningTeams,
+       aes(x = reorder(team, avg_run_yards),
+           y = avg_run_yards)) +
+  geom_col(fill = "darkgreen") +
+  coord_flip() +
+  labs(
+    title = "Top 10 NFL Teams in Average Running Yards",
+    x = "Team",
+    y = "Average Running Yards"
+  ) +
+  theme_minimal()
+
+ggplot(winLossTotals,
+       aes(x = "", y = n, fill = result)) +
+  geom_col(width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  labs(
+    title = "Overall NFL Win vs Loss Distribution (2018–2022)",
+    fill = "Game Outcome"
+  ) +
+  theme_void()
+
+
+```
 
 
 
